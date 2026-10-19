@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>异世轮回录 - 最终完美版</title>
+    <title>异世轮回录 - 完整开局流程</title>
     <style>
         /* ================= 全局与基础 ================= */
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
@@ -16,14 +16,33 @@
 
         .game-container {
             width: 100%; max-width: 450px; height: 100%; max-height: 850px;
-            background: linear-gradient(to bottom, #f2c3a7 0%, #e8a285 30%, #d9aa90 60%, #e5dfd8 100%);
+            background: #e8d8b5;
             position: relative; overflow: hidden;
             box-shadow: 0 0 20px rgba(0,0,0,0.8);
             display: flex; flex-direction: column;
         }
 
-        /* ================= 背景层 ================= */
-        .bg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; transition: filter 0.3s, opacity 0.3s; }
+        /* ================= 🔴 1. 黑屏剧情层 (最顶层，最先出现) ================= */
+        #story-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #000; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            cursor: pointer;
+        }
+        .story-text {
+            color: #fff; font-size: 22px; font-weight: bold; letter-spacing: 2px;
+            line-height: 1.8; text-align: center; padding: 0 40px;
+            min-height: 150px;
+        }
+        .story-tip {
+            position: absolute; bottom: 15%; color: #888; font-size: 14px;
+            animation: blink 1.5s infinite; font-family: sans-serif;
+            display: none;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* ================= 背景层 (转生门) ================= */
+        .bg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; transition: filter 0.3s, opacity 0.3s; display: none; }
         .bg-blur { filter: blur(5px) brightness(0.6); }
         .clouds { position: absolute; width: 100%; height: 50%; top: 0; background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.8) 0%, transparent 60%); opacity: 0.6; }
         .crystal { position: absolute; background: linear-gradient(135deg, #fff5cc, #f6c23e); opacity: 0.8; box-shadow: 0 0 20px #f6c23e; clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); animation: float 4s infinite alternate; }
@@ -47,54 +66,14 @@
         .neon-l { bottom: 25%; left: 15%; transform: rotate(-35deg); } .neon-r { bottom: 25%; right: 15%; transform: rotate(35deg); }
         .fog { position: absolute; bottom: 0; left: 0; width: 100%; height: 30%; background: linear-gradient(to top, #f2ede9 0%, #f2ede9 40%, transparent 100%); filter: blur(10px); }
 
-        /* ================= 顶部固定UI (层级提高!) ================= */
-        .top-ui { 
-            position: absolute; top: 20px; left: 0; width: 100%; 
-            display: flex; justify-content: space-between; padding: 0 15px; 
-            z-index: 999; /* 🔴 关键修复：把层级提到最高，确保能点到 */
-        }
-        
-        /* 自定义音乐按钮（纯 JS 控制） */
-        .audio-btn-wrap {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            cursor: pointer;
-        }
-        .audio-btn-inner {
-            display: flex; align-items: center; gap: 8px;
-            font-family: sans-serif; font-size: 14px; font-weight: bold; color: #333;
-        }
-        
-        /* 手绘方块 */
-        .checkmark-box {
-            width: 26px; height: 26px;
-            border: 2px solid #d9534f;
-            border-radius: 6px;
-            background-color: transparent; /* 默认透明空心 */
-            position: relative;
-            transition: all 0.2s ease;
-        }
-        
-        /* 勾选后的状态 */
-        .checkmark-box.active {
-            background-color: #d9534f; /* 红底 */
-        }
-        /* 白色对勾 */
-        .checkmark-box.active::after {
-            content: ''; position: absolute;
-            left: 8px; top: 3px;
-            width: 6px; height: 12px;
-            border: solid white; border-width: 0 3px 3px 0;
-            transform: rotate(45deg);
-        }
-
-        .audio-status { 
-            font-size: 12px; font-weight: bold; font-family: sans-serif; 
-            color: #d9534f; margin-left: 34px;
-            background: rgba(255,255,255,0.5); padding: 1px 5px; border-radius: 4px;
-            width: fit-content;
-        }
+        /* ================= 顶部UI ================= */
+        .top-ui { position: absolute; top: 20px; left: 0; width: 100%; display: none; justify-content: space-between; padding: 0 15px; z-index: 999; }
+        .audio-btn-wrap { display: flex; flex-direction: column; gap: 4px; cursor: pointer; }
+        .audio-btn-inner { display: flex; align-items: center; gap: 8px; font-family: sans-serif; font-size: 14px; font-weight: bold; color: #333; }
+        .checkmark-box { width: 26px; height: 26px; border: 2px solid #d9534f; border-radius: 6px; background-color: transparent; position: relative; transition: all 0.2s ease; }
+        .checkmark-box.active { background-color: #d9534f; }
+        .checkmark-box.active::after { content: ''; position: absolute; left: 8px; top: 3px; width: 6px; height: 12px; border: solid white; border-width: 0 3px 3px 0; transform: rotate(45deg); }
+        .audio-status { font-size: 12px; font-weight: bold; font-family: sans-serif; color: #d9534f; margin-left: 34px; background: rgba(255,255,255,0.5); padding: 1px 5px; border-radius: 4px; width: fit-content; }
 
         .currency { display: flex; align-items: center; background: rgba(0,0,0,0.4); padding: 4px 15px; border-radius: 20px; color: #fff; font-family: sans-serif; font-weight: bold; font-size: 18px; gap: 8px; }
         .soul-icon { width: 24px; height: 24px; border-radius: 50% 50% 20% 20%; box-shadow: inset 0 0 5px rgba(255,255,255,0.8); }
@@ -104,12 +83,8 @@
         .btn-small { background: rgba(255,255,255,0.8); border: 2px solid #333; border-radius: 50%; width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; font-weight: bold; cursor: pointer; }
         .btn-plus-soul { display: flex; align-items: center; background: #fff; border: 2px solid #333; padding: 2px 8px; border-radius: 10px; gap: 5px; }
 
-        /* ================= 界面 1：转生文字区 (层级降低) ================= */
-        .intro-ui { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            z-index: 5; /* 🔴 关键修复：层级比 top-ui 低 */
-            transition: opacity 0.3s; 
-        }
+        /* ================= 转生文字区 ================= */
+        .intro-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; transition: opacity 0.3s; display: none; }
         .vertical-text-container { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: row-reverse; gap: 15px; text-shadow: 1px 1px 3px rgba(0,0,0,0.4); }
         .v-text { writing-mode: vertical-rl; text-orientation: upright; font-size: 18px; color: #2b1d12; font-weight: bold; letter-spacing: 2px; line-height: 1.5; }
         .bottom-btn-container { position: absolute; bottom: 10%; width: 100%; display: flex; justify-content: center; }
@@ -117,34 +92,41 @@
         .choice-btn:hover { background: rgba(120, 110, 100, 0.9); transform: scale(1.02); }
         .choice-btn:active { transform: scale(0.95); }
 
-        /* ================= 界面 2：卷轴弹窗 ================= */
+        /* ================= 卷轴抽卡 ================= */
         .scroll-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; display: none; flex-direction: column; justify-content: center; align-items: center; }
-        .scroll-body { width: 90%; background-color: #f6ebd8; background-image: radial-gradient(#e6d4b8 1px, transparent 1px); background-size: 20px 20px; border-radius: 10px; position: relative; padding: 30px 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(180, 140, 100, 0.3); transform: scale(0.8); opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .scroll-body { width: 95%; background-color: #f6ebd8; background-image: radial-gradient(#e6d4b8 1px, transparent 1px); background-size: 20px 20px; border-radius: 10px; position: relative; padding: 30px 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(180, 140, 100, 0.3); transform: scale(0.8); opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .scroll-modal.active .scroll-body { transform: scale(1); opacity: 1; }
         .scroll-rod-top, .scroll-rod-bottom { position: absolute; left: -5%; width: 110%; height: 25px; background: linear-gradient(to bottom, #c4a381, #8c6c4c, #5c4331); border-radius: 12px; box-shadow: 0 3px 5px rgba(0,0,0,0.4); z-index: 2; }
         .scroll-rod-top { top: -12px; } .scroll-rod-bottom { bottom: -12px; }
         .section-title { display: flex; justify-content: center; align-items: center; font-size: 22px; color: #7a4225; font-weight: bold; margin: 10px 0 20px 0; }
         .section-title::before, .section-title::after { content: ''; flex: 1; height: 2px; background: linear-gradient(to right, transparent, #c2a281, transparent); margin: 0 15px; }
+
         .origins-container { display: flex; justify-content: space-around; margin-bottom: 25px; }
-        .origin-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .origin-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; transition: transform 0.1s; }
+        .origin-item:hover { transform: scale(1.1); }
+        .origin-item:active { transform: scale(0.95); }
         .origin-shield { width: 65px; height: 75px; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000; border-radius: 10px 10px 50% 50% / 10px 10px 30% 30%; border: 2px solid #fff; }
         .o-farmer { background: linear-gradient(135deg, #f2a1b3, #d96583); box-shadow: 0 0 15px #f2a1b3; }
         .o-hunter { background: #4a5a6a; border-color: #666; color: #888; box-shadow: none; filter: grayscale(1); }
         .o-noble { background: #8b7d3c; border-color: #666; color: #888; box-shadow: none; filter: grayscale(1); }
         .o-label { font-size: 15px; color: #5c4331; font-weight: bold; }
         .o-locked { font-size: 13px; color: #7a6250; }
-        .talents-container { display: flex; justify-content: space-between; margin-bottom: 20px; gap: 10px; }
-        .talent-card { flex: 1; background: #fff; border: 2px solid #ccc; border-radius: 5px; padding: 10px 5px; text-align: center; position: relative; cursor: pointer; clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px); box-shadow: 0 3px 5px rgba(0,0,0,0.1); transition: transform 0.1s; }
+
+        /* 天赋卡片 */
+        .talents-container { display: flex; justify-content: space-between; margin-bottom: 20px; gap: 8px; padding: 0 5px; }
+        .talent-card { flex: 1; background: #fff; border: 2px solid #ccc; border-radius: 5px; padding: 15px 2px; text-align: center; position: relative; cursor: pointer; clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); box-shadow: 0 3px 5px rgba(0,0,0,0.1); transition: transform 0.1s; display: flex; flex-direction: column; justify-content: center; }
         .talent-card:hover { transform: scale(1.05); }
         .talent-card:active { transform: scale(0.95); }
-        .talent-name { font-size: 15px; font-weight: bold; color: #333; margin-bottom: 5px; }
+        .talent-name { font-size: 13px; font-weight: bold; color: #333; margin-bottom: 5px; line-height: 1.2; padding: 0 2px;}
         .talent-divider { font-size: 10px; color: #999; margin-bottom: 5px; }
         .talent-rarity { font-size: 13px; font-weight: bold; }
         .r-common { border-color: #a0a0a0; } .r-common .talent-rarity { color: #a0a0a0; }
         .r-rare { border-color: #4a90e2; box-shadow: 0 0 8px rgba(74,144,226,0.3); } .r-rare .talent-rarity { color: #4a90e2; }
         .r-epic { border-color: #b05ce6; box-shadow: 0 0 8px rgba(176,92,230,0.4); } .r-epic .talent-rarity { color: #b05ce6; }
         .r-legendary { border-color: #e6a23c; box-shadow: 0 0 10px rgba(230,162,60,0.5); } .r-legendary .talent-rarity { color: #e6a23c; }
+        .r-mythic { border-color: #e74c3c; box-shadow: 0 0 12px rgba(231,76,60,0.6); } .r-mythic .talent-rarity { color: #e74c3c; }
 
+        /* Roll 区域 */
         .roll-section { display: flex; justify-content: space-evenly; align-items: center; width: 100%; margin-bottom: 15px; padding: 0 10px; }
         .btn-roll, .btn-free-roll { position: relative; display: flex; flex-direction: row; align-items: center; gap: 8px; cursor: pointer; transition: transform 0.1s; background: rgba(255,255,255,0.4); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(200, 180, 150, 0.5); }
         .btn-roll:hover, .btn-free-roll:hover { transform: scale(1.05); background: rgba(255,255,255,0.7); }
@@ -161,30 +143,187 @@
         .modal-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
         .modal-actions .choice-btn { width: 80%; margin: 0 auto; padding: 10px 0; font-size: 18px; background: rgba(120, 110, 100, 0.8); }
 
-        #talent-detail-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 30; display: none; justify-content: center; align-items: center; background: rgba(0,0,0,0.3); }
-        .detail-box { width: 85%; background: #fdfaf5; border-radius: 4px; position: relative; padding: 40px 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.4); border: 4px solid #f2e8d5; outline: 1px solid #d4c5b0; animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .detail-box::before { content: ''; position: absolute; top: 6px; left: 6px; right: 6px; bottom: 6px; border: 1px solid #c98b8b; border-radius: 2px; pointer-events: none; }
+        /* ================= 弹窗通用样式 ================= */
+        #detail-overlay, #origin-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 60; display: none; justify-content: center; align-items: center; background: rgba(0,0,0,0.15); }
+        .detail-box, .origin-box { width: 85%; background: #fdfaf5; border-radius: 4px; position: relative; padding: 30px 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); border: 4px solid #f2e8d5; outline: 1px solid #d4c5b0; animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .origin-box { width: 75%; padding: 35px 20px 25px 20px; }
+        .detail-box::before, .origin-box::before { content: ''; position: absolute; top: 6px; left: 6px; right: 6px; bottom: 6px; border: 1px solid #c98b8b; border-radius: 2px; pointer-events: none; }
         .corner-deco { position: absolute; width: 20px; height: 20px; border: 2px solid #d4a3a3; border-radius: 50%; opacity: 0.6; }
         .corner-deco::after { content: ''; position: absolute; width: 8px; height: 8px; border: 1px solid #d4a3a3; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); }
         .c-tl { top: 8px; left: 8px; border-bottom-color: transparent; border-right-color: transparent; transform: rotate(-45deg);}
         .c-tr { top: 8px; right: 8px; border-bottom-color: transparent; border-left-color: transparent; transform: rotate(45deg);}
         .c-bl { bottom: 8px; left: 8px; border-top-color: transparent; border-right-color: transparent; transform: rotate(-135deg);}
         .c-br { bottom: 8px; right: 8px; border-top-color: transparent; border-left-color: transparent; transform: rotate(135deg);}
-        .detail-text { font-size: 18px; color: #3a2c20; font-weight: bold; line-height: 1.6; letter-spacing: 1px; font-family: "KaiTi", "STKaiti", serif; }
+        .detail-text { font-size: 16px; color: #3a2c20; font-weight: bold; line-height: 1.6; letter-spacing: 1px; font-family: "KaiTi", "STKaiti", serif; text-align: left; padding: 0 10px;}
+        .origin-text { font-size: 17px; color: #3a2c20; font-weight: bold; line-height: 1.8; text-align: center; margin-bottom: 30px; margin-top: 10px; }
+        .origin-confirm-btn { width: 70%; margin: 0 auto; padding: 10px 0; text-align: center; border: 1px solid #b87c7c; color: #3a2c20; font-weight: bold; font-size: 18px; cursor: pointer; border-radius: 4px; background: #fff; box-shadow: inset 0 0 5px rgba(200,150,150,0.2); transition: all 0.1s; }
+        .origin-confirm-btn:hover { background: #fdf5f5; }
+        .origin-confirm-btn:active { transform: scale(0.98); }
         @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-        #ad-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; display: none; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.9); color: #fff; }
+        /* 模拟广告弹窗 */
+        #ad-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 70; display: none; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.9); color: #fff; }
         .ad-content { text-align: center; }
         .ad-icon { width: 60px; height: 60px; border: 3px solid #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px auto; font-size: 24px; animation: rotate 2s linear infinite; }
         @keyframes rotate { 100% { transform: rotate(360deg); } }
         .ad-text { font-size: 18px; font-family: sans-serif; margin-bottom: 10px; }
         .ad-timer { font-size: 24px; font-weight: bold; color: #f6c23e; font-family: monospace; }
 
-        .footer-text { position: absolute; bottom: 2%; width: 100%; text-align: center; font-size: 11px; color: #444; z-index: 10; font-family: sans-serif; }
-        .footer-text .version { float: left; margin-left: 20px; }
-
         @keyframes float { 0% { transform: translateY(0) rotate(inherit); } 100% { transform: translateY(-15px) rotate(inherit); } }
         @keyframes breathing { 0% { transform: translateX(-50%) translateY(0); } 100% { transform: translateX(-50%) translateY(-5px); } }
+
+        /* ========================================================= */
+        /* ================= 图层 1：游戏主界面 (地图) ================ */
+        /* ========================================================= */
+        #main-game-ui {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.4) 0%, transparent 80%);
+            z-index: 100; display: none; flex-direction: column;
+        }
+        
+        /* 顶部属性面板 */
+        .status-panel { display: flex; padding: 10px; gap: 10px; align-items: flex-start; z-index: 100; background: #e8d8b5;}
+        .avatar-area { display: flex; flex-direction: column; align-items: center; width: 90px; }
+        .avatar-box { width: 70px; height: 70px; background: #fdf5e6; border: 3px solid #c7ad8c; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 40px; position: relative; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .avatar-box::after { content: '👦'; position: absolute; bottom: -5px; }
+        .level-tag { font-size: 12px; font-weight: bold; background: #c7ad8c; color: #fff; padding: 1px 8px; border-radius: 10px; margin-top: -10px; z-index: 2; }
+        .hp-bar { width: 100%; height: 16px; background: #a86452; border-radius: 8px; margin-top: 5px; position: relative; border: 1px solid #7a4637; }
+        .hp-fill { width: 100%; height: 100%; background: #f08b6e; border-radius: 8px; }
+        .hp-text { position: absolute; width: 100%; text-align: center; font-size: 11px; color: #fff; top: 0; line-height: 16px; font-family: sans-serif; text-shadow: 1px 1px 1px #000; }
+        .exp-bar { width: 100%; height: 14px; background: #a08c72; border-radius: 7px; margin-top: 2px; position: relative; border: 1px solid #6b5a46; }
+        .exp-text { position: absolute; width: 100%; text-align: center; font-size: 10px; color: #fff; top: 0; line-height: 14px; font-family: sans-serif; }
+
+        .stats-grid { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
+        .stat-item { background: #f5eedc; border: 1px solid #c7ad8c; border-radius: 4px; padding: 2px 5px; font-size: 12px; font-weight: bold; color: #5a4632; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 0 #c7ad8c; }
+        .stat-item span:last-child { font-size: 14px; color: #333; }
+        .combat-stats { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; font-size: 11px; font-weight: bold; color: #5a4632; margin-top: 3px; }
+        .combat-stats span { text-align: center; background: rgba(255,255,255,0.5); border-radius: 3px; padding: 1px 0;}
+
+        .resource-area { width: 60px; display: flex; flex-direction: column; gap: 5px; align-items: flex-end; }
+        .res-item { display: flex; align-items: center; font-size: 14px; font-weight: bold; color: #5a4632; gap: 5px;}
+        .res-icon { width: 18px; height: 18px; background: #ffd700; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 10px;}
+
+        /* 场景 1：地图 */
+        #scene-map {
+            flex: 1; position: relative; overflow: hidden; background: linear-gradient(to bottom, #a8d5e5 0%, #e8d8b5 30%, #c3d889 100%);
+            display: flex; flex-direction: column; justify-content: flex-end; margin: 0 15px; border-radius: 8px; border: 2px solid #c7ad8c;
+        }
+        .map-landscape { position: absolute; bottom: 0; width: 100%; height: 70%; background: linear-gradient(135deg, #d4b36a 20%, #b89549 80%); clip-path: polygon(0 20%, 100% 0, 100% 100%, 0% 100%); }
+        .map-house { position: absolute; bottom: 20%; left: 20%; font-size: 60px; text-shadow: 2px 2px 5px rgba(0,0,0,0.2);}
+        .map-tree { position: absolute; bottom: 40%; right: 30%; font-size: 50px; }
+        
+        .house-btn-wrap { position: absolute; bottom: 25%; right: 5%; z-index: 10; cursor: pointer; animation: floatBtn 2s infinite alternate;}
+        .house-btn { background: #fdf6e9; border: 2px solid #c7ad8c; padding: 10px 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); font-size: 18px; font-weight: bold; color: #5a4632; display: flex; align-items: center; gap: 5px; position: relative; }
+        .house-btn::after { content: '>>'; color: #b87c7c; font-family: sans-serif;}
+        @keyframes floatBtn { 0% { transform: translateY(0); } 100% { transform: translateY(-10px); } }
+
+        /* 历史记录区 */
+        .history-logs { height: 120px; padding: 10px 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        .history-item { background: rgba(253, 246, 233, 0.9); border: 1px solid #c7ad8c; border-radius: 4px; padding: 10px 10px 10px 35px; font-size: 13px; color: #5a4632; font-weight: bold; line-height: 1.5; position: relative; }
+        .history-item::before { content: '🌿'; position: absolute; left: 8px; top: 10px; font-size: 16px; }
+
+        /* 底部导航栏 */
+        .bottom-nav { display: flex; gap: 10px; padding: 10px 15px 20px 15px; background: #d8c8a8; border-top: 2px solid #c7ad8c; margin-top: auto; z-index: 100;}
+        .nav-btn { flex: 1; background: #f5eedc; border: 2px solid #b87c7c; border-radius: 8px; padding: 10px 0; display: flex; justify-content: center; align-items: center; font-size: 18px; font-weight: bold; color: #5a4632; box-shadow: 0 3px 0 #b87c7c; }
+
+        /* ========================================================= */
+        /* ================= 场景 2：小屋内部 (卷轴) ================= */
+        /* ========================================================= */
+        #scene-house {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 150;
+            background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center;
+        }
+        .house-paper {
+            width: 85%; background: #fdf6e9; border-radius: 4px;
+            border-top: 4px solid #c7ad8c; border-bottom: 4px solid #c7ad8c;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); position: relative;
+            padding: 20px; display: flex; flex-direction: column;
+            transform-origin: top center; transform: scaleY(0); opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+        }
+        .house-paper.open { transform: scaleY(1); opacity: 1; }
+        .house-title { text-align: center; font-size: 22px; color: #7a4637; font-weight: bold; margin-bottom: 15px; border-bottom: 1px dashed #d49a9a; padding-bottom: 10px; }
+        
+        .room-item {
+            border: 1px solid #d49a9a; border-radius: 4px; padding: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; transition: background 0.2s; background: rgba(255,255,255,0.4);
+        }
+        .room-item:hover { background: rgba(255,255,255,0.8); }
+        .room-info h4 { font-size: 16px; color: #333; margin-bottom: 5px; }
+        .room-info p { font-size: 13px; color: #666; }
+        .bubble-icon { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #c7ad8c; background: #fff; position: relative; display: flex; justify-content: center; align-items: center; font-size: 20px; animation: pulseBubble 1.5s infinite; }
+        @keyframes pulseBubble { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .house-exit-btn { margin-top: 30px; text-align: center; background: #e8d8b5; border: 1px solid #c7ad8c; padding: 8px 0; border-radius: 4px; font-weight: bold; color: #5a4632; cursor: pointer; }
+
+        /* ========================================================= */
+        /* ================= 场景 3：房间事件 (打字机) ============== */
+        /* ========================================================= */
+        #scene-event {
+            position: absolute; top: 130px; left: 15px; right: 15px; z-index: 160;
+            display: none; flex-direction: column;
+        }
+        .event-paper {
+            background: #fdf6e9; border-radius: 4px; border: 2px solid #c7ad8c;
+            padding: 20px 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            position: relative; min-height: 220px;
+        }
+        .event-paper::before { content: ''; position: absolute; top: 4px; left: 4px; right: 4px; bottom: 4px; border: 1px solid #d49a9a; border-radius: 2px; pointer-events: none; }
+        
+        .event-header { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #d49a9a; padding-bottom: 10px; margin-bottom: 15px; }
+        .event-icon { font-size: 24px; }
+        .event-title { font-size: 20px; font-weight: bold; color: #5a4632; }
+        .event-text { font-size: 16px; color: #333; line-height: 1.6; font-weight: bold; min-height: 100px;}
+        
+        .event-choices { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; opacity: 0; transition: opacity 0.5s; }
+        .event-choices.show { opacity: 1; }
+        .choice-btn-action {
+            flex: 1; min-width: 45%; background: #fdf6e9; border: 1px solid #b87c7c; border-radius: 4px;
+            padding: 10px; display: flex; justify-content: center; align-items: center; gap: 5px;
+            font-weight: bold; color: #333; cursor: pointer;
+        }
+        .choice-btn-action:hover { background: #ffeaea; }
+        .choice-btn-action.leave { min-width: 100%; background: #e8d8b5;}
+
+        /* ========================================================= */
+        /* ================= 图层 2：幼年期转场弹窗 ================= */
+        /* ========================================================= */
+        #stage-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 200;
+            background: rgba(0,0,0,0.3); 
+            display: none; 
+            justify-content: center; align-items: center;
+        }
+        
+        .stage-box {
+            width: 85%; background: #fdf7eb;
+            border: 1px solid #c09c8b;
+            border-radius: 8px; padding: 30px 25px;
+            text-align: center; position: relative;
+            box-shadow: inset 0 0 0 1px #fdf7eb, inset 0 0 0 2px #c09c8b, 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .stage-title-wrap { display: flex; justify-content: center; align-items: center; gap: 5px; margin-bottom: 25px; position: relative; }
+        .stage-title-wrap::before, .stage-title-wrap::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, transparent, #d49a9a, transparent); margin: 0 10px; }
+        .stage-title-icon { font-size: 26px; margin-top: -10px;}
+        .stage-title { font-size: 24px; color: #b23b3b; font-weight: bold; letter-spacing: 2px;}
+
+        .stage-content { font-size: 16px; color: #333; text-align: left; line-height: 1.8; font-weight: bold; margin-bottom: 30px; letter-spacing: 1px; }
+        .stage-content p { margin-bottom: 20px; }
+        .stage-list { list-style: none; padding: 0; }
+        .stage-list li { margin-bottom: 12px; display: flex; align-items: flex-start; gap: 8px; }
+        .stage-list li::before { content: '◆'; color: #333; font-size: 14px; margin-top: 3px; }
+        .highlight-red { color: #b23b3b; }
+
+        .stage-btn {
+            background: #fdf7eb; border: 2px solid #c09c8b; border-radius: 6px;
+            padding: 10px 50px; font-size: 20px; font-weight: bold; color: #b23b3b;
+            cursor: pointer; display: inline-block; letter-spacing: 5px;
+            box-shadow: 0 2px 0 #c09c8b; transition: all 0.1s;
+        }
+        .stage-btn:hover { background: #fcebcd; }
+        .stage-btn:active { transform: translateY(2px); box-shadow: 0 0 0 #c09c8b; }
     </style>
 </head>
 <body>
@@ -195,6 +334,13 @@
 
 <div class="game-container">
     
+    <!-- 🔴 1. 黑屏剧情层 (最先显示) -->
+    <div id="story-overlay" onclick="nextStoryLine()">
+        <div class="story-text" id="story-text"></div>
+        <div class="story-tip" id="story-tip">（点击继续）</div>
+    </div>
+
+    <!-- 2. 转生背景层 (对话后显示) -->
     <div class="bg-layer" id="bg-layer">
         <div class="clouds"></div>
         <div class="crystal c1"></div><div class="crystal c2"></div><div class="crystal c3"></div>
@@ -210,9 +356,8 @@
         <div class="fog"></div>
     </div>
 
-    <!-- 🔴 顶部UI，已经增加 z-index 999 -->
-    <div class="top-ui">
-        <!-- 纯 JS 控制的音乐按钮 -->
+    <!-- 顶部UI (对话后显示) -->
+    <div class="top-ui" id="top-ui">
         <div class="audio-btn-wrap" onclick="toggleAudio()">
             <div class="audio-btn-inner">
                 <div class="checkmark-box active" id="audio-checkmark"></div>
@@ -220,7 +365,6 @@
             </div>
             <div class="audio-status" id="audio-status">播放中</div>
         </div>
-        
         <div class="currency">
             <div class="soul-icon soul-blue"></div><span>0</span>
             <div class="soul-icon soul-green"></div><span>0</span>
@@ -232,7 +376,7 @@
         </div>
     </div>
 
-    <!-- 🔴 转生界面，z-index 降低为 5，确保不会遮挡上方的 UI -->
+    <!-- 转生文字区 (对话后显示) -->
     <div class="intro-ui" id="intro-ui">
         <div class="vertical-text-container">
             <div class="v-text">选择你的出身吧</div>
@@ -244,19 +388,20 @@
         </div>
     </div>
 
+    <!-- 卷轴抽卡 -->
     <div class="scroll-modal" id="scroll-modal">
         <div class="scroll-body">
             <div class="scroll-rod-top"></div>
             
             <div class="section-title">❖ 出身 ❖</div>
             <div class="origins-container">
-                <div class="origin-item">
+                <div class="origin-item" onclick="showOriginDetail('农民')">
                     <div class="origin-shield o-farmer">✝</div><div class="o-label">农民</div>
                 </div>
-                <div class="origin-item">
+                <div class="origin-item" onclick="showOriginDetail('猎人')">
                     <div class="origin-shield o-hunter">⚒</div><div class="o-label" style="color:#666">猎人</div><div class="o-locked">未解锁</div>
                 </div>
-                <div class="origin-item">
+                <div class="origin-item" onclick="showOriginDetail('贵族')">
                     <div class="origin-shield o-noble">⚔</div><div class="o-label" style="color:#666">贵族</div><div class="o-locked">未解锁</div>
                 </div>
             </div>
@@ -281,27 +426,38 @@
             </div>
 
             <div class="roll-desc">
-                <span style="color:#e74c3c;">看广告FreeRoll保底稀有，大概率出史诗/传说！</span><br>
-                <span style="font-size: 10px; color: #999;">(付费Roll大概率普通)</span>
+                <span style="color:#e74c3c;">看广告FreeRoll必出史诗/传说/神话！</span><br>
+                <span style="font-size: 10px; color: #999;">(付费Roll大概率普通、稀有)</span>
             </div>
 
             <div class="modal-actions">
-                <button class="choice-btn" onclick="alert('天赋已锁定，准备进入异世界！')">确定</button>
+                <button class="choice-btn" onclick="showMainGame()">确定</button>
                 <button class="choice-btn" onclick="closeScroll()">还要再想想</button>
             </div>
-
             <div class="scroll-rod-bottom"></div>
         </div>
     </div>
 
-    <div id="talent-detail-overlay" onclick="hideTalentDetail()">
-        <div class="detail-box" onclick="event.stopPropagation()">
+    <!-- 出身介绍专属弹窗 -->
+    <div id="origin-overlay">
+        <div class="origin-box">
             <div class="corner-deco c-tl"></div><div class="corner-deco c-tr"></div>
             <div class="corner-deco c-bl"></div><div class="corner-deco c-br"></div>
-            <div class="detail-text" id="detail-text-content"></div>
+            <div class="origin-text" id="origin-text-content"></div>
+            <div class="origin-confirm-btn" onclick="hideOriginDetail()">确 定</div>
         </div>
     </div>
 
+    <!-- 天赋详情弹窗 -->
+    <div id="detail-overlay" onclick="hideDetail()">
+        <div class="detail-box" onclick="event.stopPropagation()">
+            <div class="corner-deco c-tl"></div><div class="corner-deco c-tr"></div>
+            <div class="corner-deco c-bl"></div><div class="corner-deco c-br"></div>
+            <div class="detail-text" id="detail-text-content" style="white-space: pre-wrap;"></div>
+        </div>
+    </div>
+
+    <!-- 模拟广告弹窗 -->
     <div id="ad-overlay">
         <div class="ad-content">
             <div class="ad-icon">🎬</div>
@@ -310,31 +466,134 @@
         </div>
     </div>
 
-    <div class="footer-text">
-        <span class="version">v3.26</span>
-        <span>本游戏为单机游戏，删除游戏会导致存档消失。</span>
+    <!-- ================= 游戏主界面 (地图) ================= -->
+    <div id="main-game-ui">
+        <div class="status-panel">
+            <div class="avatar-area">
+                <div class="avatar-box"></div>
+                <div class="level-tag">1岁</div>
+                <div class="hp-bar"><div class="hp-fill"></div><div class="hp-text">生命:106</div></div>
+                <div class="exp-bar"><div class="exp-text">经验:0</div></div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stats-row">
+                    <div class="stat-item"><span>勇猛: 💪</span> <span>7</span></div>
+                    <div class="stat-item"><span>灵巧: 🍃</span> <span>1</span></div>
+                    <div class="stat-item"><span>体质: 🏋️</span> <span>1</span></div>
+                </div>
+                <div class="stats-row">
+                    <div class="stat-item"><span>智力: 🧠</span> <span>3</span></div>
+                    <div class="stat-item"><span>魅力: 🌸</span> <span>5</span></div>
+                    <div class="stat-item"><span>家境: 💰</span> <span>5</span></div>
+                </div>
+                <div class="combat-stats">
+                    <span>攻击: 7.8</span><span>格挡: 0.3%</span><span>回复: 0.0</span><span>溅伤: 0.0%</span>
+                    <span>防御: 0</span><span>反击: 0.0%</span><span>攻速: 0.50</span><span>闪避: 0.0%</span>
+                </div>
+            </div>
+
+            <div class="resource-area">
+                <div class="res-item"><span>⚡ 体力: <span id="ui-stamina">30</span></span></div>
+                <div class="res-item"><span>🪙 金币: 0</span></div>
+            </div>
+        </div>
+
+        <div id="scene-map">
+            <div class="map-landscape"></div>
+            <div class="map-house">🏡</div>
+            <div class="map-tree">🌳</div>
+            <div class="map-tree" style="bottom: 10%; left: 10%; font-size: 40px;">🌲</div>
+            
+            <div class="house-btn-wrap" onclick="openHouse()">
+                <div class="house-btn">🏠 小屋</div>
+            </div>
+        </div>
+
+        <div class="history-logs" id="history-logs">
+            <div class="history-item">
+                <div style="position:absolute; left:6px; top:50%; transform:translateY(-50%); font-size:13px; font-weight:bold; color:#5a4632;">1岁</div>
+                <div style="margin-left:25px;">太阳历151年，你出生在一个普通的农民家庭里，你的父亲叫阿尔塔，你的母亲叫贝拉。</div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-btn">角色</div>
+            <div class="nav-btn">时间流逝</div>
+            <div class="nav-btn">人际</div>
+        </div>
+    </div>
+
+    <!-- ================= 小屋内部 (卷轴) ================= -->
+    <div id="scene-house">
+        <div class="house-paper" id="house-paper-ui">
+            <div class="house-title">🏠 小屋</div>
+            <p style="font-size: 14px; color: #666; margin-bottom: 20px; font-weight: bold;">虽然简陋而老旧，但也是你温暖的小家。</p>
+            
+            <div class="room-item" onclick="enterRoom()">
+                <div class="room-info">
+                    <h4>你的房间</h4>
+                    <p>就是你的房间。</p>
+                </div>
+                <div class="bubble-icon">💭</div>
+            </div>
+
+            <div class="house-exit-btn" onclick="closeHouse()">离开</div>
+        </div>
+    </div>
+
+    <!-- ================= 房间事件 (打字机) ================= -->
+    <div id="scene-event">
+        <div class="event-paper">
+            <div class="event-header">
+                <div class="event-icon">🏆</div>
+                <div class="event-title">房间</div>
+                <div style="font-size:12px; color:#666; margin-left:auto;">1岁</div>
+            </div>
+            <div class="event-text" id="typewriter-text"></div>
+            
+            <div class="event-choices" id="event-choices">
+                <div class="choice-btn-action" onclick="doAction('爬来爬去', 15)">爬来爬去 ⚡<span style="color:#f6c23e;">15</span></div>
+                <div class="choice-btn-action" onclick="doAction('玩玩具', 15)">玩玩具 ⚡<span style="color:#f6c23e;">15</span></div>
+                <div class="choice-btn-action leave" onclick="exitRoom()">离开</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 幼年期转场弹窗 ================= -->
+    <div id="stage-overlay">
+        <div class="stage-box">
+            <div class="stage-title-wrap">
+                <span class="stage-title-icon">👦</span>
+                <div class="stage-title">幼年期</div>
+            </div>
+            <div class="stage-content">
+                <p>你初次诞生于这个世界，年幼的你极需要父母的呵护。你的潜力无限，迎接你的将是未知。</p>
+                <ul class="stage-list">
+                    <li>时间流逝将以两年为单位。</li>
+                    <li>你的<span class="highlight-red">体力上限提高30</span>。</li>
+                    <li>你的基础属性将随着年龄增长快速提高。</li>
+                </ul>
+            </div>
+            <div class="stage-btn" onclick="closeStage()">继 续</div>
+        </div>
     </div>
 
 </div>
 
 <script>
-    // ================= 纯 JS 音乐系统 =================
+    // ================= 音乐系统 =================
     const bgmAudio = document.getElementById('bgm-audio');
     const audioCheckmark = document.getElementById('audio-checkmark');
     const audioStatus = document.getElementById('audio-status');
-    
-    // 初始状态：开启
     let isAudioOn = true;
 
     function toggleAudio() {
-        isAudioOn = !isAudioOn; // 切换状态
-        
+        isAudioOn = !isAudioOn;
         if (isAudioOn) {
-            // 打开音乐
-            audioCheckmark.classList.add('active'); // 变红底打勾
+            audioCheckmark.classList.add('active');
             audioStatus.innerText = "播放中";
             audioStatus.style.color = "#d9534f";
-            
             let playPromise = bgmAudio.play();
             if (playPromise !== undefined) {
                 playPromise.catch(e => {
@@ -343,28 +602,106 @@
                 });
             }
         } else {
-            // 关闭音乐
-            audioCheckmark.classList.remove('active'); // 变白底红框
+            audioCheckmark.classList.remove('active');
             audioStatus.innerText = "已关闭";
             audioStatus.style.color = "#666";
             bgmAudio.pause();
         }
     }
 
-    // ================= 游戏逻辑 =================
+    // ================= 🔴 剧情对话逻辑 (最优先执行) =================
+    const storyLines = [
+        "我。。。死了？",
+        "你是谁，这里是哪里？",
+        "你被选中了，异世之人。\n保留你的记忆，去往新的世界吧。"
+    ];
+    let currentStoryIndex = 0;
+    let isTyping = false;
+    let typeTimer = null;
+    let currentTextFull = "";
+
+    // 页面加载完毕直接启动黑屏对话
+    window.onload = () => {
+        generateTalents(false); // 后台预先生成天赋
+        startStory();
+    };
+
+    function startStory() {
+        document.getElementById('story-overlay').style.display = 'flex';
+        currentStoryIndex = 0;
+        playStoryLine();
+    }
+
+    function playStoryLine() {
+        const textElement = document.getElementById('story-text');
+        const tipElement = document.getElementById('story-tip');
+        
+        textElement.innerHTML = "";
+        tipElement.style.display = 'none';
+        
+        currentTextFull = storyLines[currentStoryIndex];
+        isTyping = true;
+        
+        let i = 0;
+        clearInterval(typeTimer); 
+        
+        typeTimer = setInterval(() => {
+            if (i < currentTextFull.length) {
+                if (currentTextFull.charAt(i) === '\n') {
+                    textElement.innerHTML += '<br>';
+                } else {
+                    textElement.innerHTML += currentTextFull.charAt(i);
+                }
+                i++;
+            } else {
+                clearInterval(typeTimer);
+                isTyping = false;
+                tipElement.style.display = 'block'; 
+            }
+        }, 150); 
+    }
+
+    // 点击黑屏层
+    function nextStoryLine() {
+        // 如果正在打字，点击直接显示全部文字
+        if (isTyping) {
+            clearInterval(typeTimer);
+            document.getElementById('story-text').innerHTML = currentTextFull.replace(/\n/g, '<br>');
+            document.getElementById('story-tip').style.display = 'block';
+            isTyping = false;
+            return;
+        }
+
+        // 如果已经打完，进入下一句
+        currentStoryIndex++;
+        if (currentStoryIndex < storyLines.length) {
+            playStoryLine();
+        } else {
+            // 对话完全结束，隐藏黑屏，显示转生门
+            document.getElementById('story-overlay').style.display = 'none';
+            document.getElementById('bg-layer').style.display = 'block';
+            document.getElementById('top-ui').style.display = 'flex';
+            document.getElementById('intro-ui').style.display = 'block';
+            
+            // 此时如果有音乐，可以尝试播放
+            if (isAudioOn) {
+                bgmAudio.volume = 0.5;
+                bgmAudio.play().catch(e => console.log("需点击才能播放"));
+            }
+        }
+    }
+
+    // ================= 界面流转控制 =================
     const bgLayer = document.getElementById('bg-layer');
     const introUI = document.getElementById('intro-ui');
     const scrollModal = document.getElementById('scroll-modal');
     const talentsBox = document.getElementById('talents-box');
-    const detailOverlay = document.getElementById('talent-detail-overlay');
-    const detailTextContent = document.getElementById('detail-text-content');
-    const adOverlay = document.getElementById('ad-overlay');
-    const adTimerText = document.getElementById('ad-timer');
+    const mainGameUI = document.getElementById('main-game-ui');
+    const sceneHouse = document.getElementById('scene-house');
+    const housePaperUI = document.getElementById('house-paper-ui');
+    const sceneEvent = document.getElementById('scene-event');
 
-    window.onload = () => {
-        generateTalents(false); 
-    };
-
+    // 转生门 -> 抽卡
     function startGame() {
         if (isAudioOn) {
             bgmAudio.volume = 0.5;
@@ -373,7 +710,6 @@
                 audioStatus.style.color = "#d9534f";
             }).catch(e => console.log("播放被拦截"));
         }
-
         bgLayer.classList.add('bg-blur'); 
         introUI.style.opacity = '0'; 
         setTimeout(() => introUI.style.display = 'none', 300); 
@@ -391,36 +727,130 @@
         }, 300);
     }
 
-    function showTalentDetail(cardElement) {
-        const desc = cardElement.getAttribute('data-desc');
-        detailTextContent.innerText = desc;
-        detailOverlay.style.display = 'flex';
+    // 抽卡确定 -> 进入地图 & 弹出幼年期
+    function showMainGame() {
+        scrollModal.style.display = 'none';
+        document.querySelector('.top-ui').style.display = 'none';
+        bgLayer.style.display = 'none'; 
+        
+        mainGameUI.style.display = 'flex'; 
+        
+        // 显示幼年期弹窗
+        document.getElementById('stage-overlay').style.display = 'flex';
     }
 
-    function hideTalentDetail() {
-        detailOverlay.style.display = 'none';
+    // 关闭幼年期弹窗
+    function closeStage() {
+        document.getElementById('stage-overlay').style.display = 'none';
+    }
+
+    // ================= 场景交互逻辑 =================
+    function openHouse() {
+        sceneHouse.style.display = 'flex';
+        setTimeout(() => { housePaperUI.classList.add('open'); }, 50);
+    }
+
+    function closeHouse() {
+        housePaperUI.classList.remove('open');
+        setTimeout(() => { sceneHouse.style.display = 'none'; }, 400); 
+    }
+
+    function enterRoom() {
+        housePaperUI.classList.remove('open');
+        setTimeout(() => { sceneHouse.style.display = 'none'; }, 400);
+
+        sceneEvent.style.display = 'flex';
+        document.getElementById('event-choices').classList.remove('show');
+        const textContainer = document.getElementById('typewriter-text');
+        textContainer.innerHTML = '';
+
+        const storyText = "你躺在婴儿床里，你还太小了，只能在床上爬行，或者发出咿咿呀呀的叫声。你的父母寸步不离地照护你，为了逗你开心，他们还在床上放了很多玩具。但是你从不像其他婴儿那样哭闹，这让他们非常担心。";
+        
+        typeWriter(storyText, 0, textContainer, () => {
+            document.getElementById('event-choices').classList.add('show');
+        });
+    }
+
+    function exitRoom() {
+        sceneEvent.style.display = 'none';
+    }
+
+    function doAction(actionName, staminaCost) {
+        let currentStamina = parseInt(document.getElementById('ui-stamina').innerText);
+        if(currentStamina < staminaCost) {
+            alert("体力不足！");
+            return;
+        }
+        document.getElementById('ui-stamina').innerText = currentStamina - staminaCost;
+
+        const historyLogs = document.getElementById('history-logs');
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `
+            <div style="position:absolute; left:6px; top:50%; transform:translateY(-50%); font-size:13px; font-weight:bold; color:#5a4632;">1岁</div>
+            <div style="margin-left:25px;">你选择了【${actionName}】，度过了一段时光。</div>
+        `;
+        historyLogs.prepend(div);
+
+        alert(`你选择了【${actionName}】\n消耗了 ${staminaCost} 点体力。`);
+        exitRoom();
+    }
+
+    // 打字机引擎 (用于房间事件)
+    function typeWriter(text, i, element, callback) {
+        if (i < text.length) {
+            element.innerHTML += text.charAt(i);
+            let speed = 40; 
+            if(text.charAt(i) === '，' || text.charAt(i) === '。') speed = 150;
+            setTimeout(() => {
+                typeWriter(text, i + 1, element, callback);
+            }, speed);
+        } else {
+            if (callback) callback();
+        }
+    }
+
+    // ================= 其他弹窗与抽卡逻辑 =================
+    function showOriginDetail(originType) {
+        const textBox = document.getElementById('origin-text-content');
+        if (originType === '农民') {
+            textBox.innerHTML = `你出生在一个偏远的山村，你的父母都是农民。在这个看似平静的地方，一场巨大的危机在酝酿。<br><br>职业：战士`;
+        } else if (originType === '猎人') {
+            textBox.innerHTML = `你生于森林的怀抱，与野兽为伴。你拥有敏锐的目光和致命的箭术。<br><br>职业：游侠 (未解锁)`;
+        } else if (originType === '贵族') {
+            textBox.innerHTML = `你出生在繁华的城镇，家族的荣光笼罩着你。你从小便受过良好的教育。<br><br>职业：法师 (未解锁)`;
+        }
+        document.getElementById('origin-overlay').style.display = 'flex';
+    }
+
+    function hideOriginDetail() {
+        document.getElementById('origin-overlay').style.display = 'none';
+    }
+
+    function showTalentDetail(cardElement) {
+        const desc = cardElement.getAttribute('data-desc');
+        document.getElementById('detail-text-content').innerText = desc;
+        document.getElementById('detail-overlay').style.display = 'flex';
+    }
+
+    function hideDetail() {
+        document.getElementById('detail-overlay').style.display = 'none';
     }
 
     function showAdForRoll() {
-        adOverlay.style.display = 'flex';
+        document.getElementById('ad-overlay').style.display = 'flex';
         let timeLeft = 3;
-        adTimerText.innerText = timeLeft + 's';
-
+        document.getElementById('ad-timer').innerText = timeLeft + 's';
         let timer = setInterval(() => {
             timeLeft--;
-            adTimerText.innerText = timeLeft + 's';
-            
+            document.getElementById('ad-timer').innerText = timeLeft + 's';
             if (timeLeft <= 0) {
                 clearInterval(timer);
-                adOverlay.style.display = 'none'; 
-                triggerAdSDK(); 
+                document.getElementById('ad-overlay').style.display = 'none'; 
+                alert("广告观看完毕，获得3个极品天赋！");
+                rollTalents(true);
             }
         }, 1000);
-    }
-
-    function triggerAdSDK() {
-        alert("广告观看完毕，获得3个极品天赋！");
-        rollTalents(true);
     }
 
     function rollTalents(isFree) {
@@ -431,42 +861,82 @@
         }, 150);
     }
 
-    const rarities = [
-        { name: '普通', class: 'r-common' },
-        { name: '稀有', class: 'r-rare' },
-        { name: '史诗', class: 'r-epic' },
-        { name: '传说', class: 'r-legendary' }
-    ];
+    const rarities = {
+        common: { name: '普通', class: 'r-common' },
+        rare: { name: '稀有', class: 'r-rare' },
+        epic: { name: '史诗', class: 'r-epic' },
+        legendary: { name: '传说', class: 'r-legendary' },
+        mythic: { name: '神话', class: 'r-mythic' }
+    };
 
     const talentPool = [
-        { name: '强壮的', desc: '力大无穷，力量+4。' },
-        { name: '聪明的', desc: '天赋异禀，智力+4。' },
-        { name: '幸运的', desc: '命运眷顾，遭遇奇遇概率提升。' },
-        { name: '过目不忘', desc: '记忆力超群，学习效率翻倍。' },
-        { name: '天选之人', desc: '你就是世界的主角，全属性+2。' },
-        { name: '武神降世', desc: '万中无一的战斗天才，力量+10。' },
-        { name: '先知', desc: '预知未来，必定触发完美选项。' }
+        { name: '剑之勇者·撕裂', desc: '攻速+10%，免疫迟缓；每次攻击撕裂目标，使其流失当前生命值的1.5%。', rarity: 'mythic' },
+        { name: '神机妙算', desc: '战斗开始时，每有1点智力，提升0.7%的攻击。', rarity: 'mythic' },
+        { name: '吸血鬼血脉', desc: '白天行动不便，体力-15；回复+5，获得0.8%吸血。', rarity: 'mythic' },
+        { name: '复仇者', desc: '格挡+20%；格挡后获得1层“复仇”，提高10%反击率，最大4层；反击清除所有“复仇”层数，每层提高25%伤害。', rarity: 'mythic' },
+        { name: '邪恶血液', desc: '最大生命+10%；每次受到攻击发动血袭，使敌人受到你最大生命值1%的伤害。', rarity: 'mythic' },
+        { name: '剑之勇者·剑术', desc: '攻击力+10%，攻速+20%，攻击无法被闪避。', rarity: 'mythic' },
+        { name: '盾之勇者', desc: '初始防御+20且防御+100%，攻击力-75%；获得盾反，每次被攻击反弹防御力15%的伤害。', rarity: 'mythic' },
+        { name: '愈之勇者', desc: '初始回复+3，生命回复率+50%。', rarity: 'mythic' },
+        { name: '枪兵', desc: '反击概率+15%，反击伤害+20%。', rarity: 'mythic' },
+        { name: '孤独勇者', desc: '无任何同伴上阵时，战斗开始前增加5基础回复，25%基础攻击、基础防御、回复率。', rarity: 'mythic' },
+        { name: '极度谨慎', desc: '属性提高，每次战斗必然获得先手。', rarity: 'mythic' },
+        { name: '怕痛全点防御', desc: '防御力+40%，基础防御+10。', rarity: 'mythic' },
+        { name: '技能王者', desc: '每学一项技能，战斗开始时攻击+2.5%、防御+2.5%、回复+1。', rarity: 'mythic' },
+        { name: '探险家', desc: '冒险体力消耗-1，篝火疗伤额外回复5%生命。', rarity: 'mythic' },
+        { name: '健身达人', desc: '每次锻炼额外获得1点相应属性；最大体力+10。', rarity: 'mythic' },
+        { name: '超强打工人', desc: '打工收益+50%，最大体力+10。', rarity: 'mythic' },
+        { name: '钓鱼达人', desc: '不需鱼竿即可钓鱼，钓鱼难度大降低，钓鱼收益+50%，最大体力+10。', rarity: 'mythic' },
+        { name: '点金手', desc: '家境+5，每回合+1家境。', rarity: 'mythic' },
+        { name: '死里逃生', desc: '死里逃生次数+2，死里逃生回复全部生命值。', rarity: 'mythic' },
+        { name: '众神祝福', desc: '成长期全属性额外+1；魅力+5，智力+5。', rarity: 'mythic' },
+        { name: '格斗天才', desc: '格挡减伤率+20%。', rarity: 'legendary' },
+        { name: '极快手速', desc: '基础攻速+0.12。', rarity: 'legendary' },
+        { name: '商业天才', desc: '每一点家境获取的金币提高。', rarity: 'legendary' },
+        { name: '失眠患者', desc: '最大体力+10。', rarity: 'legendary' },
+        { name: '坚定意志', desc: '死里逃生次数+2。', rarity: 'legendary' },
+        { name: '灵魂收割', desc: '击败敌人后的灵魂获取量+1。', rarity: 'legendary' },
+        { name: '钓鱼好手', desc: '钓鱼难度降低。', rarity: 'epic' },
+        { name: '有点小帅', desc: '魅力+6。', rarity: 'epic' },
+        { name: '天才大脑', desc: '智力+6。', rarity: 'epic' },
+        { name: '勇敢的心', desc: '成长期内每年额外+1勇猛。', rarity: 'epic' },
+        { name: '短跑天才', desc: '成长期内每年额外+1灵巧。', rarity: 'epic' },
+        { name: '强健体魄', desc: '成长期内每年额外+1体质。', rarity: 'epic' },
+        { name: '还算好看', desc: '魅力+3。', rarity: 'rare' },
+        { name: '小聪明', desc: '智力+3。', rarity: 'rare' },
+        { name: '身体强壮', desc: '初始勇猛+6。', rarity: 'rare' },
+        { name: '身体敏捷', desc: '初始灵巧+6。', rarity: 'rare' },
+        { name: '身体坚韧', desc: '初始体质+6。', rarity: 'rare' },
+        { name: '身体强壮', desc: '初始勇猛+3。', rarity: 'common' },
+        { name: '身体敏捷', desc: '初始灵巧+3。', rarity: 'common' },
+        { name: '身体坚韧', desc: '初始体质+3。', rarity: 'common' }
     ];
+
+    function getPoolByRarity(rarityName) {
+        return talentPool.filter(t => t.rarity === rarityName);
+    }
 
     function generateTalents(isFree) {
         let html = '';
         for(let i=0; i<3; i++) {
             let rand = Math.random();
-            let rIndex = 0;
+            let rKey = 'common';
 
             if (isFree) {
-                if (rand > 0.70) rIndex = 3;
-                else if (rand > 0.20) rIndex = 2;
-                else rIndex = 1;
+                if (rand > 0.60) rKey = 'mythic';
+                else if (rand > 0.20) rKey = 'legendary';
+                else rKey = 'epic';
             } else {
-                if (rand > 0.98) rIndex = 3;
-                else if (rand > 0.90) rIndex = 2;
-                else if (rand > 0.60) rIndex = 1;
-                else rIndex = 0;
+                if (rand > 0.99) rKey = 'mythic';
+                else if (rand > 0.95) rKey = 'legendary';
+                else if (rand > 0.80) rKey = 'epic';
+                else if (rand > 0.50) rKey = 'rare';
+                else rKey = 'common';
             }
 
-            let rarity = rarities[rIndex];
-            let talent = talentPool[Math.floor(Math.random() * talentPool.length)];
+            let rarity = rarities[rKey];
+            let pool = getPoolByRarity(rKey);
+            let talent = pool[Math.floor(Math.random() * pool.length)];
 
             html += `
             <div class="talent-card ${rarity.class}" data-desc="${talent.desc}" onclick="showTalentDetail(this)">
